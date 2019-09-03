@@ -8,8 +8,6 @@ from skimage.io import imsave
 
 
 # %%
-# the code comes from here:
-# https://gist.github.com/andrewgiessel/4635563
 
 def make_gaussian(size, fwhm=125, center=None):
     """
@@ -23,6 +21,7 @@ def make_gaussian(size, fwhm=125, center=None):
     :param center: position of the center of the gaussian, default is at the center of the image
     :return: an image that contains a 2D Gaussian
 
+    The code comes from here: https://gist.github.com/andrewgiessel/4635563.
     """
 
     x = np.arange(0, size, 1, float)

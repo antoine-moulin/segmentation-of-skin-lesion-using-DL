@@ -1,20 +1,38 @@
+### IMPORTS ###
 import numpy as np
 from skimage.io import imread
-import keras
-from keras.utils import to_categorical
 from PIL import Image
 import cv2 as cv
+
+import keras
+from keras.utils import to_categorical
 
 from tf_unet.image_util import BaseDataProvider
 import glob
 
 
 class DataGenerator(keras.utils.Sequence):
-    """Generates data for Keras using a data set of 5-channel images"""
+    """
+    Object for fitting to a dataset of images with multiple channels (e.g. 5 channels instead of the RGB channels).
+    Implement the `__getitem__` and the `__len__` methods from the Keras' Sequence class.
+
+    Attributes:
+        path: string, path to the folder containing the dataset.
+        list_IDs: array of strings, images' IDs that are to be used for the generator (e.g. images from the training set).
+        img_suffix: string, suffix of the images used (e.g. '.jpg' or '.tiff').
+        mask_suffix: string, suffix of the masks used (e.g. '_segmentation.png').
+        batch_size: int, size of the batches for the generator.
+        dim: tuple, dimensions of the images (width and height).
+        n_channels: int, number of channels in the images.
+        n_classes: int, number of classes (e.g. for segmentation, 0 if the pixel is outside the mask and 1 otherwise).
+        shuffle: boolean, True if the dataset has to be shuffled, False otherwise.
+    """
 
     def __init__(self, path, list_IDs, img_suffix, mask_suffix,
                  batch_size=1, dim=(320, 320), n_channels=5, n_classes=2, shuffle=True):
-        """Initialization"""
+        """
+        Initialization of DataGenerator.
+        """
 
         self.dim = dim
         self.batch_size = batch_size
@@ -30,12 +48,16 @@ class DataGenerator(keras.utils.Sequence):
         self.on_epoch_end()
 
     def __len__(self):
-        """Denotes the number of batches per epoch"""
+        """
+        Denotes the number of batches per epoch.
+        """
 
         return int(np.floor(len(self.list_IDs) / self.batch_size))
 
     def __getitem__(self, index):
-        """Generate one batch of data"""
+        """
+        Generate one batch of data.
+        """
 
         # Generate indexes of the batch
         indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
@@ -49,14 +71,18 @@ class DataGenerator(keras.utils.Sequence):
         return X, y
 
     def on_epoch_end(self):
-        """Updates indexes after each epoch"""
+        """
+        Updates indexes after each epoch.
+        """
 
         self.indexes = np.arange(len(self.list_IDs))
         if self.shuffle:
             np.random.shuffle(self.indexes)
 
     def __data_generation(self, list_IDs_temp):
-        """Generates data containing batch_size samples"""  # X : (n_samples, *dim, n_channels)
+        """
+        Generates data containing batch_size samples.
+        """  # X: (n_samples, *dim, n_channels)
 
         # Initialization
         X = np.empty((self.batch_size, *self.dim, self.n_channels))
