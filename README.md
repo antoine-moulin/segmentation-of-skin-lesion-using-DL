@@ -4,7 +4,7 @@ This repository contains:
 
 * <tt>preprocessing_unet.py</tt> to create the data set and preprocess the images
 * <tt>data_generator.py</tt> to handle the data
-* <tt>model_brut_implementation.py</tt> (using [<tt>Keras</tt>](https://keras.io/)), <tt>model_other_params.py</tt> (using [<tt>segmentation_models</tt>](https://github.com/qubvel/segmentation_models)), <tt>model_tf_unet.py</tt> (using [<tt>tf_unet</tt>](https://github.com/jakeret/tf_unet))
+* <tt>model_brut_implementation.py</tt> (using [<tt>Keras</tt>](https://keras.io/)), <tt>model.py</tt> (using [<tt>segmentation_models</tt>](https://github.com/qubvel/segmentation_models)), <tt>model_tf_unet.py</tt> (using [<tt>tf_unet</tt>](https://github.com/jakeret/tf_unet))
 * <tt>predict.py</tt>
 * <tt>useful_functions.py</tt>
 * The folder <tt>results</tt> with skin lesions and the associated contours predicted by our model
@@ -29,7 +29,7 @@ In this file, we transform the RGB images into 5-channels images as indicated in
 
 This file contains a class, <tt>DataGenerator</tt>, that allows us to manage the data set, which contains 5-channel images and binary masks.
 
-## <tt>model_other_params.py</tt>
+## <tt>model.py</tt>
 
 This file contains the code for our model. We did try to fully implement the U-Net or to use the library <tt>tf_unet</tt> but we focused on the <tt>segmentation_models</tt> library. Besides, this model takes a size divisible by 32!
 
