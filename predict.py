@@ -4,44 +4,80 @@ import cv2
 import matplotlib.pyplot as plt
 
 from skimage.io import imread
-from skimage.io import imsave
-from scipy.ndimage.morphology import binary_fill_holes
-from scipy.ndimage.morphology import binary_dilation
+from scipy.ndimage.morphology import binary_fill_holes, binary_dilation
 from scipy.ndimage.interpolation import zoom
-
-
-from useful_functions import draw_contour_on_image
-from preprocessing_unet import preprocessing_unet
 
 from keras.models import model_from_json
 from segmentation_models.metrics import iou_score
 
+from data_generator import retrieve_ids
+from utils import draw_contour_on_image, display_some_results
+from preprocessing import preprocessing_unet
 
-#%%
-def predict_mask(model,
-                 im_id,
-                 img_dir,
-                 img_suffix='.jpg',
-                 mask_suffix='_segmentation.png',
-                 largest_dimension=250,
+
+def load_model(model_dir, model_id):
+    """
+    Load a model and its weights.
+
+    Parameters
+    ----------
+    model_dir: string
+      Name of the folder that contains saved models.
+
+    model_id: string
+      ID of the model to load.
+
+    Returns
+    -------
+    loaded_model: Model
+      The loaded model.
+    """
+
+    json_file = open(model_dir + model_id + 'model.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights(model_dir + model_id + 'weights.h5')
+
+    return loaded_model
+
+
+def predict_mask(model, im_id, img_dir, img_suffix='.jpg', mask_suffix='_segmentation.png', largest_dimension=250,
                  desired_size=320):
     """
     Takes an image unprocessed as the input and returns the binary mask with the same dimensions predicted by the model.
     The postprocessing consists in applying a dilation and then a filling.
 
     Usage:
-    pred = predict_mask(model, im, img_dir)
+     pred = predict_mask(model, im, img_dir)
 
-    :param model: the model used for the prediction. We suppose it has been trained using the segmentation-models
-                  library
-    :param im_id: id of the image
-    :param img_dir: folder that contains the images for the segmentation (without any preprocessing)
-    :param img_suffix: suffix of the original image, default is .jpg
-    :param mask_suffix: suffix of the mask, default is .png
-    :param largest_dimension: the largest dimension used for the preprocessing. In the paper, 250 is used
-    :param desired_size: the desired size of the preprocessed image. In the paper, 320 is used
-    :return: a binary mask of the skin lesion
+    Parameters
+    ----------
+    model: Model
+      The model used for the prediction. We suppose it has been trained using the segmentation-models library.
 
+    im_id: string
+      Id of the image.
+
+    img_dir: string
+      Folder that contains the images for the segmentation (without any preprocessing).
+
+    img_suffix: string
+      Suffix of the original image, default is '.jpg'.
+
+    mask_suffix: string
+      Suffix of the mask, default is '.png'.
+
+    largest_dimension: int
+      The largest dimension used for the preprocessing. In the paper, 250 is used.
+
+    desired_size: int
+      The desired size of the preprocessed image. In the paper, 320 is used.
+
+    Returns
+    -------
+    mask: ndarray, shape (width, height)
+      A binary mask of the skin lesion.
     """
 
     # preprocess the image
@@ -57,7 +93,6 @@ def predict_mask(model,
         percent = largest_dimension / float(rows)
         csize = int((float(columns) * float(percent)))
         original_im = cv2.resize(original_im, (csize, largest_dimension))
-
     else:
         percent = largest_dimension / float(columns)
         rsize = int((float(rows) * float(percent)))
@@ -70,52 +105,63 @@ def predict_mask(model,
 
     # predict the mask
     pred = model.predict(im)
-    pred = np.squeeze(pred)
+    pred = np.squeeze(pred) > .3
 
-    # # threshold
-    pred = (pred > 0.3)
-
-    # # post-processing
+    # post-processing
     pred = binary_dilation(pred).astype(int)
     pred = binary_fill_holes(pred).astype(int)
     pred = binary_dilation(pred).astype(int)
     pred = binary_dilation(pred).astype(int)
     pred = binary_fill_holes(pred).astype(int)
 
-    # # crop the mask
+    # crop the mask
     pred = pred[top:pred.shape[0]-bottom, left:pred.shape[1]-right]
 
-    # # resize so the mask has the same dimensions as the original image
+    # resize so the mask has the same dimensions as the original image
     return zoom(pred, [rows/pred.shape[0], columns/pred.shape[1]])
 
 
-#%%
+# settings
+img_dir = './ISIC2018_Task1-2_Training_Input/'
+gt_dir = './ISIC2018_Task1_Training_GroundTruth/'
+img_suffix = '.tiff'
+mask_suffix = '_segmentation.png'
+im_size = (320, 320)
+
 # load json and create model
 model_dir = './saved_models/segmentation_models/'
-model_id = '2019-04-25/'
-
-json_file = open(model_dir + model_id + 'model.json', 'r')
-loaded_model_json = json_file.read()
-json_file.close()
-loaded_model = model_from_json(loaded_model_json)
-# load weights into new model
-loaded_model.load_weights(model_dir + model_id + 'weights.h5')
-
-#%%
+model_id = '2019-04-25_12-19-15/'
+model = load_model(model_dir, model_id)
 
 results_dir = './results/'
-
 if os.path.isdir(results_dir + model_id) == 0:
     os.mkdir(results_dir + model_id)
 
+# predict and save predictions
+test_data_path = './ISIC2018_data/test/'
+IDs_test = retrieve_ids(test_data_path, img_suffix, mask_suffix)
+n_test = len(IDs_test)
+nb_images_to_predict = n_test
+images_to_predict = IDs_test[np.random.permutation(n_test)[:nb_images_to_predict]]
+
+display_some_results(model=model,
+                     im_names=images_to_predict,
+                     im_path=test_data_path,
+                     im_suffix=img_suffix,
+                     mask_suffix=mask_suffix,
+                     threshold=0.3,
+                     dim=im_size,
+                     display=False,
+                     save=True)
+
+# superpose image, ground truth and prediction
 specific_images = ['ISIC_0000031', 'ISIC_0000060', 'ISIC_0000073', 'ISIC_0000074', 'ISIC_0000121', 'ISIC_0000166',
                    'ISIC_0000355', 'ISIC_0000395', 'ISIC_0009944', 'ISIC_0010047', 'ISIC_0016064']
 
 for im_test in specific_images:
+    pred = predict_mask(model, im_test, './ISIC2018_Task1-2_Training_Input/')
 
-    pred = predict_mask(loaded_model, im_test, './ISIC2018_Task1-2_Training_Input/')
+    original_image_path = img_dir + im_test + '.jpg'
+    original_mask_path = gt_dir + im_test + '_segmentation.png'
 
-    original_image = imread('./ISIC2018_Task1-2_Training_Input/' + im_test + '.jpg')
-    original_mask = imread('./ISIC2018_Task1_Training_GroundTruth/' + im_test + '_segmentation.png')
-
-    draw_contour_on_image(im_test+'.jpg', './ISIC2018_Task1-2_Training_Input/', original_mask, pred, results_dir+model_id)
+    draw_contour_on_image(original_image_path, original_mask_path, pred, results_dir+model_id)

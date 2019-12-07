@@ -1,0 +1,1 @@
+{"loss": "Jaccard", "optimizer": "Adam", "learning_rate": 0.0002, "training_ratio": 0.9, "batch_size": 1, "nb_epochs": 100}
