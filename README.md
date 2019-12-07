@@ -29,3 +29,5 @@ This file contains the code to train our model. We did try to fully implement th
 To predict a mask, see the last cell of the file to use your own images. The original images must be in the folder <tt>ISIC2018_Task1-2_Training_Input</tt> and the ground truth mask, if available, in the folder <tt>ISIC2018_Task1_Training_GroundTruth</tt>.
 
 * <tt>utils.py</tt>
+
+This file contains some functions to save a model, to plot some results etc.
