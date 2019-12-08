@@ -1,6 +1,6 @@
 numpy
 scipy
-skimage
+scikit-image
 opencv-python
 Pillow
 keras
