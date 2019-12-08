@@ -1,0 +1,7 @@
+numpy
+scipy
+skimage
+opencv-python
+Pillow
+keras
+segmentation-models
