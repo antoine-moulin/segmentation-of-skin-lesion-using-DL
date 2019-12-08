@@ -6,9 +6,13 @@ The paper used for this project is: [Skin Lesion Segmentation: U-Nets versus Clu
 
 To use this project:
 
-1. Open the file <tt>preprocessing.py</tt> and follow the instructions in the docstring of the function <tt>build_training_set</tt> to create the data set (download images of ISIC challenge etc.). The data set is too heavy to be stored on the git repository but is available here:
-2. Go to the file <tt>train.py</tt> to train a model. It will be saved in the <tt>saved_models</tt> folder.
-3. Go to the file <tt>predict.py</tt> to predict some masks. The results will be displayed in the folder </tt>results/model_id</tt>. The model provided here has the id <tt>2019-04-25_12-19-15</tt>.
+1. Install the requirements:
+```bash
+pip install -r requirements.txt
+```
+2. Open the file <tt>preprocessing.py</tt> and follow the instructions in the docstring of the function <tt>build_training_set</tt> to create the data set (download images of ISIC challenge etc.). The data set is available here: [https://challenge2018.isic-archive.com/task1/training/](https://challenge2018.isic-archive.com/task1/training/)
+3. Run the file <tt>train.py</tt> to train a model. It will be saved in the <tt>saved_models</tt> folder.
+4. Run the file <tt>predict.py</tt> to predict some masks. The results will be displayed in the folder </tt>results/model_id</tt>. The model provided here has the id <tt>2019-04-25_12-19-15</tt>.
 
 # Organization
 
